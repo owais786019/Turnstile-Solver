@@ -43,6 +43,10 @@ jobs:
       - name: Fetch Camoufox binaries
         run: python -m camoufox fetch
 
-      # 6. Run the solver using Camoufox
+      # 6. Install virtual display server (Xvfb)
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      # 7. Run the solver using Camoufox under a virtual display
       - name: Run automation script
-        run: python api_solver.py --browser_type camoufox
+        run: xvfb-run -a python api_solver.py --browser_type camoufox
