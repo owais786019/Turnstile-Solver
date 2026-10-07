@@ -1,0 +1,48 @@
+name: Python Camoufox Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Fetch your repository code using the latest checkout mechanism
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      # 2. Deploy Python utilizing the optimized architecture with native pip caching
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # 3. Spin up the Turnstile Solver background environment
+      - name: Run Turnstile Solver Container
+        run: |
+          docker run -d \
+            -p 3389:3389 \
+            -p 5000:5000 \
+            -e TZ=Asia/Baku \
+            --name turnstile_solver \
+            theyka/turnstile_solver:latest
+
+      # 4. Standard Python dependency installations
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # 5. Fetch Camoufox browser dependencies 
+      - name: Fetch Camoufox binaries
+        run: python -m camoufox fetch
+
+      # 6. Execute your pipeline core logic
+      - name: Run automation script
+        run: python api_solver.py
